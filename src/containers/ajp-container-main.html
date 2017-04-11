@@ -1,0 +1,91 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/iron-media-query/iron-media-query.html">
+<link rel="import" href="../../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../../bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="../styles/ajp-common-styles.html">
+<link rel="import" href="../styles/ajp-form-styles.html">
+<link rel="import" href="../components/ajp-toolbar.html">
+
+<dom-module id="ajp-container-main">
+
+	<template>
+
+		<style include="ajp-common-styles">
+
+			:host {
+				display: block;
+				padding-top: 64px;
+			}
+
+			iron-pages {
+				/*min-height: 100vh;max-width: 1440px;*/
+				margin: 0 auto;
+				padding: 0 15px 28px 15px;
+				max-width: 900px;
+				overflow: hidden;
+			}
+
+		</style>
+
+		<iron-media-query query="max-width: 767px" query-matches="{{smallScreen}}"></iron-media-query>
+
+		<ajp-toolbar page="[[page]]"></ajp-toolbar>
+
+		<app-location route="{{route}}"></app-location>
+		<app-route route="{{route}}" pattern="/:page" data="{{routeData}}" tail="{{subroute}}"></app-route>
+
+		<div class="flex-horizontal-with-ratios">
+			<div class="flexchild"></div>
+			<div class="flex3child">
+				<iron-pages role="main" selected="[[page]]" attr-for-selected="name" selected-attribute="visible">
+					<ajp-picture-add name="picture-add" id="pictureadd" media-stream="{{mediaStream}}"><paper-spinner active></paper-spinner></ajp-picture-add>
+				</iron-pages>
+			</div>
+			<div class="flexchild"></div>
+		</div>
+
+	</template>
+
+	<script>
+
+		Polymer({
+
+			is: 'ajp-container-main',
+
+			properties: {
+				baasbox: {
+					type: Object
+				},
+
+				mediaStream: {
+					type: Object,
+					reflectToAttribute: true
+				},
+
+				page: {
+					type: String
+				}
+			},
+
+			ready: function() {
+				this.addEventListener('captureImage',             this._fireAction);
+				this.addEventListener('startCameraPermission',    this._fireAction);
+				this.addEventListener('turnOffCamera',            this._fireAction);
+				this.addEventListener('turnOnCamera',             this._fireAction);
+			},
+
+			_fireAction: function(event) {
+				switch(event.type) {
+					case 'captureImage':             this.$.pictureadd.captureImage();                                      break;
+					case 'startCameraPermission':    this.$.pictureadd.startCameraPermission();                             break;
+					case 'turnOffCamera':            this.$.pictureadd.turnOffCamera();                                     break;
+					case 'turnOnCamera':             this.$.pictureadd.turnOnCamera();                                      break;
+					default:console.error('There was no matching details for the event that was listened by the main container.', event);
+				}
+			}
+
+		});
+
+	</script>
+
+</dom-module>

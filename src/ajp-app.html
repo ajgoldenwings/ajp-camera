@@ -1,0 +1,305 @@
+<!-- @license Copyright (c) 2016 The Polymer Project Authors. All rights reserved. This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as part of the polymer project is also subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt -->
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/app-layout/app-scroll-effects/effects/waterfall.html">
+<link rel="import" href="../bower_components/app-layout/app-toolbar/app-toolbar.html">
+<link rel="import" href="../bower_components/app-layout/helpers/helpers.html">
+<link rel="import" href="../bower_components/app-route/app-location.html">
+<link rel="import" href="../bower_components/app-route/app-route.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../bower_components/paper-progress/paper-progress.html">
+
+<!-- <link rel="import" href="containers/ajp-container-welcome.html"> -->
+<link rel="import" href="containers/ajp-container-main.html">
+<link rel="import" href="containers/ajp-container-authentication.html">
+
+<link rel="import" href="components/ajp-toolbar.html">
+<link rel="import" href="components/ajp-media-stream.html">
+
+<dom-module id="ajp-app">
+	<template>
+		<style>
+			:host {
+				display: block;
+				position: relative;
+				min-height: 100vh;
+				--app-primary-color: #202020;
+				--app-secondary-color: #757575;
+				--app-accent-color: #172C50;
+				--paper-button-ink-color: var(--app-accent-color);
+				--paper-spinner-color: var(--app-accent-color);
+				-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+				color: var(--app-primary-color);
+			}
+
+			.announcer {
+				position: fixed;
+				height: 0;
+				overflow: hidden;
+			}
+
+			[hidden] {
+				display: none !important;
+			}
+
+			iron-pages {
+				min-height: 100vh;
+				margin: 0 auto;
+			}
+
+			paper-progress {
+				--paper-progress-active-color: var(--app-primary-color);
+				--paper-progress-container-color: white;
+				bottom: 0;
+				position: fixed;
+				width: 100%;
+				z-index: 2;
+			}
+		</style>
+
+		<app-location route="{{route}}"></app-location>
+		<app-route route="{{route}}" pattern="/:page" data="{{routeData}}" tail="{{subroute}}"></app-route>
+
+		<!-- Meadia Stream Component -->
+		<ajp-media-stream id="media" name="media" media-stream="{{mediaStream}}"></ajp-media-stream>
+
+		<iron-pages role="layout" selected="[[getLayout]]" attr-for-selected="name" selected-attribute="visible">
+			<ajp-container-main name="main" id="main" media-stream="{{mediaStream}}" page="[[page]]">Loading...</ajp-container-main>
+			<ajp-container-authentication name="authentication" id="authentication" page="[[page]]">Loading...</ajp-container-authentication>
+		</iron-pages>
+
+		<paper-progress name="progress" id="progress" hidden indeterminate></paper-progress>
+
+		<!-- a11y announcer -->
+		<div class="announcer" aria-live="assertive">[[_a11yLabel]]</div>
+	</template>
+
+	<script>
+
+		Polymer({
+			is: 'ajp-app',
+
+			properties: {
+				mediaStream: {
+					type: Object,
+					reflectToAttribute: true
+				},
+
+				page: {
+					type: String,
+					reflectToAttribute: true,
+					observer: '_pageChanged'
+				},
+
+				registeredUserPages: {
+					type: Object,
+					value: [
+						'picture-add'
+					]
+				},
+
+				unregisteredUserPages: {
+					type: Object,
+					value: ['gotocamera']
+				},
+
+				getLayout: {
+					type: String
+				}
+			},
+
+			observers: [
+				'_routePageChanged(routeData.page)'
+			],
+
+			listeners: {
+				'change-section': '_onChangeSection',
+				'announce': '_onAnnounce',
+				'dom-change': '_domChange'
+			},
+
+			created: function() {
+				window.performance && performance.mark && performance.mark('ajp-app.created');
+				// Custom elements polyfill safe way to indicate an element has been upgraded.
+				this.removeAttribute('unresolved');
+			},
+
+			ready: function() {
+				// listen for online/offline
+				Polymer.RenderStatus.afterNextRender(this, function() {
+					this.listen(window, 'online', '_notifyNetworkStatus');
+					this.listen(window, 'offline', '_notifyNetworkStatus');
+				});
+
+				this.addEventListener('App',           this._fireAction);
+				this.addEventListener('Authentication',this._fireAction);
+				this.addEventListener('Main',          this._fireAction);
+				this.addEventListener('Media',         this._fireAction);
+			},
+
+			_fireAction: function(event) {
+				switch(event.type) {
+					case 'App':           this._fireActionApp(       event.detail.typeFire, event.detail);break;
+					case 'Authentication':this.$.authentication.fire(event.detail.typeFire, event.detail);break;
+					case 'Main':          this.$.main.fire(          event.detail.typeFire, event.detail);break;
+					case 'Media':         this.$.media.fire(         event.detail.typeFire, event.detail);break;
+					default:console.error('There was no matching details for the event that was listened by the app.', event);
+				}
+			},
+
+			_fireActionApp: function(type, detail) {
+				switch(type) {
+					case 'hideSnack':          this._hideSnack();                                                            break;
+					case 'mainAppFire':        this._mainAppFire(detail.fire,detail.details);                                break;
+					case 'progressHide':       this.$.progress.setAttribute("hidden",true);                                  break;
+					case 'progressShow':       this.$.progress.removeAttribute("hidden");                                    break;
+					case 'setPage':            this.set('route.path', '/'+detail.page);                                      break;
+					case 'showSnack':          this._throwSnack(detail.message,detail.hold,detail.onClick,detail.fireFinaly);break;
+					default:console.error('There was no matching function for the app event.', type);
+				}
+			},
+
+			_getLayoutValue: function(page) {
+				var value;
+				switch(page) {
+					case 'gotocamera': value = 'authentication';break;
+					default:       value = 'main';
+				}
+				return value;
+			},
+
+			_getIronPageValue: function(page) {
+				if (page == '' || page == 'gotocamera') {
+					page = 'gotocamera';
+				} else {
+					page = 'picture-add';
+				}
+				this.set('route.path', '/'+page);
+
+				return page;
+			},
+
+			_hideSnack: function() {
+				this._networkSnackbar.setAttribute("onClick","");
+				this._networkSnackbar.close();
+			},
+
+			_routePageChanged: function(page) {
+				// access sibling or parent elements here
+				this.async(function() {
+					this.page = this._getIronPageValue(page);
+					this.getLayout = this._getLayoutValue(this.page);
+					// Scroll to the top of the page on every *route* change. Use `Polymer.AppLayout.scroll`
+					// with `behavior: 'silent'` to disable header scroll effects during the scroll.
+					Polymer.AppLayout.scroll({ top: 0, behavior: 'silent' });
+					// Close the drawer - in case the *route* change came from a link in the drawer.
+					// this.drawerOpened = false;
+				});
+			},
+
+			_mainAppFire: function(fire,details) {
+				var that = this;
+				fire(that,details);
+			},
+
+			_pageChanged: function(page, oldPage) {
+				if (page != null) {
+					// home route is eagerly loaded
+					if (page == 'home') {
+						this._pageLoaded(Boolean(oldPage));
+					// other routes are lazy loaded
+					} else {
+						this.importHref(
+							this.resolveUrl('pages/ajp-' + page + '.html'),
+							function() {
+								this._pageLoaded(Boolean(oldPage));
+							}, null, true);
+					}
+				}
+			},
+
+			_pageLoaded: function(shouldResetLayout) {
+				this._ensureLazyLoaded();
+			},
+
+			_ensureLazyLoaded: function() {
+				// load lazy resources after render and set `loadComplete` when done.
+				if (!this.loadComplete) {
+					Polymer.RenderStatus.afterNextRender(this, function() {
+						this.importHref(this.resolveUrl('lazy-resources.html'), function() {
+							// Register service worker if supported.
+							if ('serviceWorker' in navigator) {
+								navigator.serviceWorker.register('/service-worker.js');
+							}
+							this._notifyNetworkStatus();
+							this.loadComplete = true;
+						});
+					});
+				}
+			},
+
+			_notifyNetworkStatus: function() {
+				var oldOffline = this.offline, message;
+				this.offline =  !navigator.onLine;
+				// Show the snackbar if the user is offline when starting a new session or if the network status changed.
+				if (this.offline || (!this.offline && oldOffline === true)) {
+					this.offline =  !navigator.onLine;
+					// Show the snackbar if the user is offline when starting a new session or if the network status changed.
+					message = this.offline ? 'You are offline' : 'You are online';
+					this._throwSnack(message,false);
+				}
+			},
+
+			// Elements in the app can notify section changes.
+			// Response by a11y announcing the section and syncronizing the category.
+			_onChangeSection: function(event) {
+				var detail = event.detail;
+				this.categoryName = detail.category || '';
+				// Announce the page's title
+				if (detail.title) {
+					this._announce(detail.title);
+				}
+			},
+
+			// Elements in the app can notify a change to be a11y announced.
+			_onAnnounce: function(e) {
+				this._announce(e.detail);
+			},
+
+			_throwSnack(message,hold,onClick,fireFinaly) {
+				onClick = ((typeof onClick === 'undefined') ? "" : onClick + ";");
+				onClick += "this.fire('App',{typeFire:'hideSnack'});"
+				hold = (typeof hold === 'undefined') ? false : hold;
+				if (!this._networkSnackbar) {
+					this._networkSnackbar = document.createElement('ajp-snackbar');
+					Polymer.dom(this.root).appendChild(this._networkSnackbar);
+				}
+				Polymer.dom(this._networkSnackbar).setAttribute("onClick",onClick);
+				Polymer.dom(this._networkSnackbar).innerHTML = message;
+				this._networkSnackbar.open(hold);
+				if (fireFinaly !== undefined) {
+					fireFinaly();
+				}
+			},
+
+			// A11y announce the given message.
+			_announce: function(message) {
+				this._a11yLabel = '';
+				this.debounce('_a11yAnnouncer', function() {
+					this._a11yLabel = message;
+				}, 100);
+			},
+
+			// This is for performance logging only.
+			_domChange: function(e) {
+				if (window.performance && performance.mark && !this.__loggedDomChange) {
+					var target = Polymer.dom(e).rootTarget;
+					if (target.domHost.is.match(this.page)) {
+						this.__loggedDomChange = true;
+						performance.mark(target.domHost.is + '.domChange');
+					}
+				}
+			}
+		});
+	</script>
+</dom-module>

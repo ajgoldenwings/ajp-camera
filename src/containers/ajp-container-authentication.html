@@ -1,0 +1,67 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/iron-media-query/iron-media-query.html">
+<link rel="import" href="../../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../../bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="../styles/ajp-button.html">
+<link rel="import" href="../styles/ajp-common-styles.html">
+<link rel="import" href="../components/ajp-toolbar.html">
+
+<dom-module id="ajp-container-authentication">
+
+	<template>
+
+		<style include="ajp-button ajp-common-styles">
+
+			:host {
+				display: block;
+				padding-top: 64px;
+			}
+
+			iron-pages {
+				margin: 0 auto;
+				padding: 0 24px 48px 24px;
+				max-width: 900px;
+				overflow: hidden;
+			}
+
+		</style>
+
+		<iron-media-query query="max-width: 767px" query-matches="{{smallScreen}}"></iron-media-query>
+
+		<ajp-toolbar></ajp-toolbar>
+
+		<app-location route="{{route}}"></app-location>
+		<app-route route="{{route}}" pattern="/:page" data="{{routeData}}" tail="{{subroute}}"></app-route>
+
+		<iron-pages role="main" selected="[[page]]" attr-for-selected="name" selected-attribute="visible">
+			<ajp-gotocamera name="gotocamera" id="gotocamera"><paper-spinner active></paper-spinner></ajp-gotocamera>
+		</iron-pages>
+
+	</template>
+
+	<script>
+
+		Polymer({
+
+			is: 'ajp-container-authentication',
+
+			properties: {
+				page: {
+					type: String
+				}
+			},
+
+			ready: function() {
+			},
+
+			_fireAction: function(event) {
+				switch(event.type) {
+					default:console.error('There was no matching details for the event that was listened by the authentication container.', event);
+				}
+			}
+
+		});
+
+	</script>
+
+</dom-module>

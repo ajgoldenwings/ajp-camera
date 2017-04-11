@@ -1,0 +1,84 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout.html">
+
+<dom-module id="ajp-form-styles">
+	<template>
+		<style>
+
+			:host {
+				--paper-card-actions: {
+					padding: 10px 20px;
+					text-align: center;
+				}
+			}
+
+			ajp-button {
+				text-align: center;
+				white-space: nowrap;
+			}
+
+			.main-frame {
+				margin: 0 auto;
+				padding: 0 24px 48px 24px;
+				max-width: 900px;
+				overflow: hidden;
+			}
+
+			.grid {
+				margin-top: 40px;
+				@apply(--layout-horizontal);
+			}
+
+			.grid > section {
+				@apply(--layout-flex);
+						margin-bottom: 80px;
+			}
+
+			.grid > section:not(:first-child) {
+				margin-left: 80px;
+			}
+
+			.row {
+				@apply(--layout-horizontal);
+				@apply(--layout-end);
+			}
+
+			.column {
+				@apply(--layout-vertical);
+			}
+
+			.row > .flex,
+			.input-row > * {
+				@apply(--layout-flex);
+			}
+
+			.input-row > *:not(:first-child) {
+				margin-left: 8px;
+			}
+
+			@media (max-width: 767px) {
+				div[responsive-show] {
+					display: inline;
+				}
+
+				section[responsive-hidden] {
+					padding-left: 10000px;
+					position: fixed;
+				}
+
+				.grid {
+					display: block;
+					margin-top: 0;
+				}
+
+				.grid > section {
+					margin-bottom: 0px;
+				}
+
+				.grid > section:not(:first-child) {
+					margin-left: 0;
+				}
+			}
+		</style>
+	</template>
+</dom-module>

@@ -1,0 +1,89 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/iron-localstorage/iron-localstorage.html">
+
+<dom-module id="ajp-media-stream">
+	<template>
+		<iron-localstorage name="media-mtorage" value="{{mediaStorage}}" on-iron-localstorage-load-empty="initializeDefaultMediaStorage"></iron-localstorage>
+	</template>
+	<script>
+		Polymer({
+			is: "ajp-media-stream",
+
+			properties: {
+				mediaStorage: {
+					type: Object
+				},
+
+				mediaStream: {
+					type: Object,
+					reflectToAttribute: true
+				}
+			},
+
+			ready: function() {
+				this.addEventListener('allowAccessToCamera',this._fireAction);
+				this.addEventListener('setMedia',           this._fireAction);
+				this.addEventListener('startCamera',        this._fireAction);
+			},
+
+			initializeDefaultMediaStorage: function() {
+				this.mediaStorage = {
+					allowedCamera: false
+				}
+			},
+
+			_fireAction: function(event) {
+				switch(event.type) {
+					case 'allowAccessToCamera':this._allowAccessToCamera(event.detail.callbackNeedUserPermissionSuccess,event.detail.callbackNeedUserPermissionFail);break;
+					case 'setMedia':           this._setMedia(event.detail.mediaStream);                                                                             break;
+					case 'startCamera':        this._startCamera(event.detail.callbackSuccess,event.detail.callbackFail,event.detail.callbackNeedUserPermission);    break;
+					default:console.error('There was no matching details for the event that was listened by the media stream component.', event);
+				}
+			},
+
+			_allowAccessToCamera: function(callbackNeedUserPermissionSuccess, callbackNeedUserPermissionFail) {
+				var that = this;
+				navigator.getUserMedia(
+					{
+						video: {
+				 			mandatory: {
+				 				minWidth: 400,
+				 				minHeight: 400,
+				 				maxWidth: 400,
+				 				maxHeight: 400
+				 			}
+				 		}
+					},
+					function(localMediaStream) {
+						that.set('mediaStorage.allowedCamera', true);
+						callbackNeedUserPermissionSuccess(localMediaStream);
+					}, function(err) {
+						callbackNeedUserPermissionFail(err);
+					}
+				);
+			},
+
+			_setMedia: function(mediaStream) {
+				this.mediaStream = mediaStream;
+			},
+
+			_startCamera: function(callbackSuccess,callbackFail,callbackNeedUserPermission) {
+				navigator.getUserMedia = this._getUserMedia();
+
+				if (this.mediaStorage.allowedCamera == false) {
+					if (navigator.getUserMedia) {
+						callbackNeedUserPermission();
+					} else {
+						callbackFail();
+					}
+				} else {
+					callbackSuccess();
+				}
+			},
+
+			_getUserMedia: function() {
+				return (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
+			}
+		});
+	</script>
+</dom-module>

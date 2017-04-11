@@ -1,0 +1,59 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-progress/paper-progress.html">
+<link rel="import" href="../../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../styles/ajp-form-styles.html">
+<link rel="import" href="../styles/ajp-button.html">
+<link rel="import" href="../styles/ajp-common-styles.html">
+<link rel="import" href="../styles/ajp-input.html">
+
+<dom-module id="ajp-gotocamera">
+
+	<template>
+
+		<style include="ajp-button ajp-common-styles ajp-input ajp-form-styles">
+
+		</style>
+
+		<form
+			id="gotocameraForm"
+			is="iron-form"
+			method="post"
+		>
+
+			<h2 class="center">Hello, thanks for stopping by. Click the button to go to the camera.</h2>
+
+			<div class="subsection grid">
+				<section>
+
+					<div class="row input-row">
+						<ajp-button responsive on-click="_gotocamera">
+							<a>Go to Camera</a>
+						</ajp-button>
+					</div>
+
+				</section>
+			</div>
+		</form>
+	</template>
+
+	<script>
+
+		Polymer({
+
+			is: 'ajp-gotocamera',
+
+			properties: {
+
+			},
+
+			_gotocamera: function() {
+				this.fire('App', {typeFire: 'progressShow'});
+				this.fire('App', {typeFire: 'setPage', page: 'picture-add'});
+				this.fire('App', {typeFire: 'progressHide'});
+			}
+
+		});
+
+	</script>
+
+</dom-module>

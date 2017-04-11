@@ -1,0 +1,114 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/app-layout/app-header/app-header.html">
+<link rel="import" href="../../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../styles/ajp-common-styles.html">
+<link rel="import" href="../ajp-icons.html">
+
+<dom-module id="ajp-toolbar">
+
+	<template>
+
+		<style include="ajp-common-styles">
+			:host {
+				--paper-icon-button-ink-color: var(--app-accent-color);
+			}
+
+			app-header {
+				@apply(--layout-fixed-top);
+				z-index: 1;
+				background-color: rgba(255, 255, 255, 0.95);
+				--app-header-shadow: {
+					box-shadow: inset 0px 5px 6px -3px rgba(0, 0, 0, 0.2);
+					height: 10px;
+					bottom: -10px;
+				};
+			}
+
+			paper-icon-button {
+				color: var(--app-primary-color);
+			}
+
+			.logo {
+				text-align: center;
+			}
+
+			.logo a {
+				font-size: 27px;
+				font-weight: 600;
+				letter-spacing: 0.1em;
+				color: var(--app-primary-color);
+				text-decoration: none;
+				/* required for IE 11, so this <a> can receive pointer events */
+				display: inline-block;
+				pointer-events: auto;
+			}
+
+			.back-btn {
+				display: none;
+			}
+
+			:host([page=picture-add]) .back-btn {
+				display: flex;
+			}
+
+			:host([page=picture-add]) .logo {
+				padding-right: 40px;
+			}
+		</style>
+
+		<app-header role="navigation" id="header" effects="waterfall" condenses reveals>
+			<app-toolbar>
+				<div class="left-bar-item">
+					<a id="back" class="back-btn" href="/" tabindex="-1">
+						<paper-icon-button icon="arrow-back" aria-label="Go back"></paper-icon-button>
+					</a>
+				</div>
+
+				<iron-pages id="logo" role="titleLink" selected="[[title]]" attr-for-selected="name" selected-attribute="visible" selected="home" fallbackSelection="home" title>
+					<div class="logo action" name="action"><a href="/" aria-label="AJP Camera">AJP Camera</a></div>
+					<div class="logo home" name="home"><a href="/action" aria-label="AJP Camera">AJP Camera</a></div>
+				</iron-pages>
+			</app-toolbar>
+		</app-header>
+
+	</template>
+
+	<script>
+
+		Polymer({
+
+			is: 'ajp-toolbar',
+
+			properties: {
+				page: {
+					type: String,
+					reflectToAttribute: true,
+					observer: '_pageChanged'
+				},
+
+				title: {
+					value: "home",
+					type: String,
+					reflectToAttribute: true
+				}
+			},
+
+			_pageChanged: function(page, oldPage) {
+				if (page == 'events') {
+					this.title = 'home';
+				} else {
+					this.title = 'action';
+				}
+
+				this._updateBack(page, oldPage);
+			},
+
+			_updateBack(page, oldPage) {
+				// there was some logic here
+				this.$.back.setAttribute("href", "/"+"gotocamera");
+			}
+		});
+
+	</script>
+
+</dom-module>

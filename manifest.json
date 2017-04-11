@@ -1,0 +1,9 @@
+{
+  "name": "AJP Camera",
+  "short_name": "AJP Camera",
+  "start_url": "/",
+  "background_color": "#fff",
+  "display": "fullscreen",
+  "theme_color": "#fff",
+  "orientation": "portrait"
+}

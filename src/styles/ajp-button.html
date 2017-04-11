@@ -1,0 +1,72 @@
+<!-- @license Copyright (c) 2016 The Polymer Project Authors. All rights reserved. This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as part of the polymer project is also subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt-->
+
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id="ajp-button">
+	<template>
+		<style>
+
+			ajp-button {
+				display: inline-block;
+			}
+
+			ajp-button > * {
+				display: inline-block;
+				box-sizing: border-box;
+				border: 2px solid #000;
+				font-size: 14px;
+				font-weight: 500;
+
+			/*color: var(--app-primary-color);*/
+				color: #202020;
+
+				margin: 0;
+				padding: 8px 44px;
+				text-align: center;
+				text-decoration: none;
+				text-transform: uppercase;
+				border-radius: 0;
+				outline: none;
+				-webkit-appearance: none;
+			}
+
+			ajp-button > *:focus {
+				background-color: #c5cad3;
+			}
+
+			ajp-button > *:active {
+				background-color: #000;
+				color: #FFF;
+			}
+
+			@media (max-width: 767px) {
+
+				ajp-button[responsive] {
+					height: 64px;
+				}
+
+				ajp-button[responsive] > * {
+					/*background-color: var(--app-accent-color);*/
+					background-color: #172C50;
+					border: none;
+					color: white;
+					font-size: 18px;
+				}
+
+				ajp-button[responsive] > *:focus {
+					/*background-color: var(--app-accent-color);*/
+				}
+			}
+
+			@media (max-height: 500px) and (max-width: 767px) {
+				ajp-button[responsive] {
+					height: 32px;
+				}
+
+				ajp-button[responsive] > * {
+					font-size: 0.9em;
+				}
+			}
+		</style>
+	</template>
+</dom-module>

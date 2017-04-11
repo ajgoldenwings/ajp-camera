@@ -1,0 +1,125 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/iron-list/iron-list.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../ajp-icons.html">
+<link rel="import" href="../styles/ajp-form-styles.html">
+<link rel="import" href="../styles/ajp-button.html">
+<link rel="import" href="../styles/ajp-common-styles.html">
+
+<dom-module id="ajp-picture-add">
+	<template>
+		<style include="ajp-form-styles ajp-button ajp-common-styles">
+			#canvas { border-radius: 50%; margin-top: 20px; display: block; max-height: 200px; max-width: 200px;}
+		</style>
+
+		<br>
+
+		<div class="container flex-horizontal-with-ratios">
+			<div class="flexchild"></div>
+			<div class="flex3child">
+
+				<div class="row input-row">
+					<div class="column">
+						<ajp-button responsive on-click="_startCamera">
+							<a><paper-icon-button icon="camera-enhance" aria-label="Take Pictuer"></paper-icon-button>Take Photo</a>
+						</ajp-button>
+					</div>
+				</div>
+
+				<div class="row input-row">
+					<div class="column">
+						<canvas class="center" id="canvas" width="400" height="400" on-click="_notifyToCaptureNewPhoto"></canvas>
+					</div>
+				</div>
+
+				<div class="row input-row">
+					<div class="column">
+						<br>
+					</div>
+				</div>
+			</div>
+
+			<div class="flexchild"></div>
+		</div>
+	</template>
+
+	<script>
+		Polymer({
+			is: 'ajp-picture-add',
+
+			properties: {
+				mediaStream: {
+					type: Object,
+					reflectToAttribute: true
+				}
+			},
+
+			ready: function() {
+			},
+
+			startCameraPermission: function() {
+				var that = this;
+				var callbackNeedUserPermissionSuccess = function (localMediaStream) {
+					that.mediaStream = localMediaStream;
+					that.fire('Main', {typeFire: 'turnOffCamera'});
+					that.fire('Media', {typeFire: 'setMedia', mediaStream: localMediaStream});
+					var onClickEventCall = "this.fire('Main', {typeFire: 'captureImage'}); this.fire('Main', {typeFire: 'turnOffCamera'}); ";
+					var fireFinaly = function () {that.fire('Main', {typeFire: 'turnOnCamera'})};
+					that.fire('App', {typeFire: 'showSnack', hold: true, message: 'Touch photo to capture.<hr><video muted="" autoplay="" style="width:100%;max-width:500px"></video>', onClick: onClickEventCall, fireFinaly: fireFinaly});
+				};
+				var callbackNeedUserPermissionFail = function (err) {
+					console.log('The following error occurred when trying to use getUserMedia: ' + err);
+					that.fire('App', {typeFire: 'showSnack', message: 'Was not able to access media device. None found or blocked.'});
+				};
+				this.fire('Media', {typeFire: 'allowAccessToCamera', callbackNeedUserPermissionSuccess: callbackNeedUserPermissionSuccess, callbackNeedUserPermissionFail: callbackNeedUserPermissionFail});
+			},
+
+			_startCamera: function() {
+				var that = this;
+				var callbackFail = function () {
+					that.fire('App', {typeFire: 'showSnack', message: 'We did not find a camera on your device. Sorry.'});
+				};
+				var callbackSuccess = function () {
+					that.fire('Main', {typeFire: 'startCameraPermission'});
+				};
+
+				var callbackNeedUserPermission = function () {
+					var onClickEventCall = "this.fire('Main', {typeFire: 'startCameraPermission'});";
+					that.fire('App', {typeFire: 'showSnack', message: 'Click here to allow access to your device\'s camera.', hold: false, onClick: onClickEventCall});
+				};
+
+				this.fire('Media', {typeFire: 'startCamera',callbackSuccess: callbackSuccess, callbackFail: callbackFail, callbackNeedUserPermission: callbackNeedUserPermission});
+			},
+
+			captureImage: function() {
+				var fire = function (that,details) {
+					var video = Polymer.dom(that._networkSnackbar).querySelector('video');
+					var context = details.getContext("2d");
+					context.drawImage(video, 0, 0, 400, 400);
+				};
+				this.fire('App', {typeFire: 'mainAppFire', fire: fire, details: this.$.canvas});
+			},
+
+			turnOnCamera: function() {
+				var fire = function (that,details) {
+					var video = Polymer.dom(that._networkSnackbar).querySelector('video');
+					window.stream = details; /*make stream available to console*/;
+					video.src = window.URL.createObjectURL(stream);
+					video.play();
+				};
+				this.fire('App', {typeFire: 'mainAppFire', fire: fire, details: this.mediaStream});
+			},
+
+			turnOffCamera: function() {
+				if (typeof stream !== 'undefined') {
+					var track = stream.getTracks()[0];
+					track.stop();
+				}
+			},
+
+			_notifyToCaptureNewPhoto: function() {
+				this.fire('App', {typeFire: 'showSnack', message: 'Press \'Take Photo\' to capture a new photo.'});
+			}
+		});
+	</script>
+</dom-module>
