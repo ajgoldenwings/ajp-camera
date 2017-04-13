@@ -3,7 +3,7 @@
 ### Information
 
 ##### Demo
-Click here: [AJP Camera](https://www.camera.anthonyjamespearson.com)
+Click here: [AJP Camera](https://www.camera.anthonyjamespearson.com/index.html)
 
 
 ##### Prerequisites
